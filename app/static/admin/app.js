@@ -70,6 +70,14 @@
       fee_text: "{p}% of confirmed orders (leads marked “Won”) is billed monthly. Last 30 days: orders {v} → fee {f}.",
       mrr: "MRR (USD)", customers: "Chatbots", paying: "Paying", owner: "Owner", plan: "Plan", expires: "Expires",
       set_plan: "Set", create_first: "Create your first chatbot", create: "Create", open_site: "Open",
+      trial_until: "Free trial until", or_invoice: "or {p} ₾/month by bank transfer",
+      invoices: "Invoices", inv_number: "Number", amount: "Amount", due: "Due", status: "Status",
+      inv_issued: "Unpaid", inv_paid: "Paid", inv_void: "Void", inv_overdue: "Overdue", open_invoice: "Open",
+      new_invoice: "Invoice", months: "Months", currency: "Currency", amount_auto: "auto",
+      buyer_name: "Company / name", buyer_tax_id: "Tax ID", buyer_email: "Email", issue_invoice: "Issue invoice",
+      mark_paid: "Paid", void_invoice: "Void", confirm_paid: "Mark {n} as paid and extend the plan?",
+      paid_month: "Collected this month", outstanding: "Awaiting payment", expiring: "Expiring soon — send a renewal invoice",
+      no_invoices: "No invoices yet.",
     },
     ka: {
       nav_dashboard: "მთავარი", nav_knowledge: "ცოდნის ბაზა", nav_inbox: "ჩატები", nav_leads: "კონტაქტები",
@@ -141,6 +149,15 @@
       mrr: "თვიური შემოსავალი (USD)", customers: "ჩატბოტები", paying: "ფასიანი", owner: "მფლობელი",
       plan: "პაკეტი", expires: "ვადა", set_plan: "დაყენება", create_first: "შექმენით პირველი ჩატბოტი",
       create: "შექმნა", open_site: "გახსნა",
+      trial_until: "უფასო საცდელი პერიოდი", or_invoice: "ან {p} ₾/თვე ბანკით გადარიცხვით",
+      invoices: "ინვოისები", inv_number: "ნომერი", amount: "თანხა", due: "ვადა", status: "სტატუსი",
+      inv_issued: "გადასახდელი", inv_paid: "გადახდილი", inv_void: "გაუქმებული", inv_overdue: "ვადაგადაცილებული",
+      open_invoice: "გახსნა", new_invoice: "ინვოისი", months: "თვე", currency: "ვალუტა", amount_auto: "ავტომატური",
+      buyer_name: "კომპანია / სახელი", buyer_tax_id: "საიდ. კოდი", buyer_email: "ელ-ფოსტა",
+      issue_invoice: "ინვოისის გაცემა", mark_paid: "გადაიხადა", void_invoice: "გაუქმება",
+      confirm_paid: "მოვნიშნოთ {n} გადახდილად და გავუგრძელოთ პაკეტი?",
+      paid_month: "ამ თვეში მიღებული", outstanding: "მოსალოდნელი გადახდები",
+      expiring: "ვადა მალე იწურება: გაუგზავნეთ განახლების ინვოისი", no_invoices: "ინვოისები ჯერ არ არის.",
     },
   };
 
@@ -938,6 +955,34 @@
         h("i", { style: { width: pct + "%" } })) : null);
   }
 
+  var CUR = { GEL: "₾", USD: "$", EUR: "€" };
+  function fmtMoney(amount, currency) { return fmtNum(amount) + " " + (CUR[currency] || currency); }
+  function fmtTotals(obj) {
+    var keys = Object.keys(obj || {});
+    return keys.length ? keys.map(function (c) { return fmtMoney(obj[c], c); }).join(" · ") : "0";
+  }
+  function invoiceStatus(inv) {
+    if (inv.status === "issued" && inv.overdue) return h("span", { class: "pill bad", text: tr("inv_overdue") });
+    var cls = { issued: "warn", paid: "good", void: "" }[inv.status];
+    return h("span", { class: "pill " + cls, text: tr("inv_" + inv.status) });
+  }
+  function invoiceTable(list, actions) {
+    if (!list.length) return h("div", { class: "empty", text: tr("no_invoices") });
+    return h("div", { class: "table-wrap" }, h("table", { class: "t" },
+      h("thead", {}, h("tr", {}, [tr("inv_number"), tr("business_name"), tr("plan"), tr("amount"), tr("due"), tr("status"), ""].map(function (x) {
+        return h("th", { text: x });
+      }))),
+      h("tbody", {}, list.map(function (inv) {
+        return h("tr", {},
+          h("td", { text: inv.number }), h("td", { text: inv.buyer_name }),
+          h("td", { text: inv.plan + " × " + inv.months }), h("td", { class: "num", text: fmtMoney(inv.amount, inv.currency) }),
+          h("td", { text: fmtDate(inv.due_at).split(" ")[0] }), h("td", {}, invoiceStatus(inv)),
+          h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } },
+            h("a", { class: "btn secondary sm", href: "/invoice/" + inv.id, target: "_blank", rel: "noopener", text: tr("open_invoice") }),
+            actions ? actions(inv) : null)));
+      }))));
+  }
+
   function pageBilling(main) {
     pageHead(main, tr("nav_billing"), state.ws.name);
     return api("GET", wsPath("/billing")).then(function (b) {
@@ -952,7 +997,7 @@
       main.appendChild(h("div", { class: "grid two" },
         h("div", { class: "card" }, h("h2", { text: tr("current_plan") }),
           h("div", { style: { fontSize: "24px", fontWeight: "800" }, text: p.name }),
-          b.plan_expires_at ? h("div", { class: "small muted", text: tr("paid_until") + ": " + fmtDate(b.plan_expires_at) }) : null,
+          b.plan_expires_at ? h("div", { class: "small muted", text: tr(b.plan_source === "trial" ? "trial_until" : "paid_until") + ": " + fmtDate(b.plan_expires_at) }) : null,
           b.paddle.status ? h("div", { class: "small muted", text: "Paddle: " + b.paddle.status }) : null, manage),
         h("div", { class: "card" },
           h("h3", { text: tr("ai_answers") }), meter(b.usage.ai_messages, p.ai_messages),
@@ -991,11 +1036,19 @@
         return h("div", { class: "plan" + (isCurrent ? " current" : "") },
           h("div", { style: { fontWeight: "700" }, text: plan.name }),
           h("div", {}, h("span", { class: "price", text: "$" + plan.price_usd }), h("span", { class: "muted", text: tr("per_month") })),
+          plan.price_gel ? h("div", { class: "small muted", text: tr("or_invoice", { p: plan.price_gel }) }) : null,
           h("ul", {}, plan.features.map(function (f) { return h("li", { text: f }); })), btn);
       });
       main.appendChild(h("div", { class: "card" }, h("div", { class: "plans" }, cards),
         h("p", { class: "small muted", style: { marginTop: "12px" } }, tr("pay_invoice") + " ",
           b.contact_email ? h("a", { href: "mailto:" + b.contact_email, text: b.contact_email }) : null)));
+
+      var invCard = h("div", { class: "card" }, h("h2", { text: tr("invoices") }));
+      main.appendChild(invCard);
+      api("GET", wsPath("/invoices")).then(function (list) {
+        if (!list.length) { invCard.remove(); return; }
+        invCard.appendChild(invoiceTable(list));
+      });
 
       if (b.platform_fee.percent > 0) {
         main.appendChild(h("div", { class: "card" }, h("h2", { text: tr("fee_title") }),
@@ -1007,18 +1060,54 @@
   // ------------------------------------------------------------------ platform (superadmin)
   function pagePlatform(main) {
     pageHead(main, tr("nav_platform"));
-    return api("GET", "/api/platform/workspaces").then(function (d) {
-      var paying = d.workspaces.filter(function (w) { return w.plan !== "free"; }).length;
+    return Promise.all([api("GET", "/api/platform/workspaces"), api("GET", "/api/platform/invoices")]).then(function (res) {
+      var d = res[0], inv = res[1];
       main.appendChild(h("div", { class: "tiles" },
-        [["$" + fmtNum(d.mrr_usd), tr("mrr")], [fmtNum(d.workspaces.length), tr("customers")], [fmtNum(paying), tr("paying")]].map(function (x) {
+        [["$" + fmtNum(d.mrr_usd), tr("mrr")], [fmtTotals(inv.paid_this_month), tr("paid_month")],
+          [fmtTotals(inv.outstanding), tr("outstanding")], [fmtNum(d.workspaces.length), tr("customers")],
+          [fmtNum(d.paying), tr("paying")]].map(function (x) {
           return h("div", { class: "tile" }, h("div", { class: "v", text: x[0] }), h("div", { class: "l", text: x[1] }));
         })));
+
+      var expiring = d.workspaces.filter(function (w) { return w.expiring_soon; });
+      if (expiring.length) {
+        main.appendChild(h("div", { class: "notice warn" }, "⏰ " + tr("expiring") + ": ",
+          expiring.map(function (w) { return w.name + " (" + fmtDate(w.plan_expires_at).split(" ")[0] + ")"; }).join(", ")));
+      }
+
+      function invoiceForm(w) {
+        var plan = h("select", {}, ["starter", "pro", "business"].map(function (p) { return h("option", { value: p, text: p }); }));
+        plan.value = w.plan !== "free" ? w.plan : "starter";
+        var months = h("select", {}, [1, 3, 6, 12].map(function (m) { return h("option", { value: String(m), text: String(m) }); }));
+        var currency = h("select", {}, ["GEL", "USD", "EUR"].map(function (c) { return h("option", { value: c, text: c }); }));
+        var amount = h("input", { type: "number", min: "0", step: "0.01", placeholder: tr("amount_auto") });
+        var buyer = h("input", { type: "text", placeholder: tr("buyer_name"), value: w.name });
+        var taxId = h("input", { type: "text", placeholder: tr("buyer_tax_id") });
+        var email = h("input", { type: "email", placeholder: tr("buyer_email"), value: w.owner_email });
+        var btn = h("button", { class: "btn sm", type: "submit", text: tr("issue_invoice") });
+        function lbl(text, input) { return h("label", { class: "f" }, text, input); }
+        return h("form", { class: "card", style: { marginTop: "8px" }, onsubmit: function (e) {
+          e.preventDefault();
+          run(btn, api("POST", "/api/platform/workspaces/" + w.id + "/invoices", {
+            plan: plan.value, months: Number(months.value), currency: currency.value,
+            amount: amount.value === "" ? null : Number(amount.value),
+            buyer_name: buyer.value, buyer_tax_id: taxId.value, buyer_email: email.value,
+          })).then(function (created) {
+            toast(created.number + " · " + fmtMoney(created.amount, created.currency));
+            window.open("/invoice/" + created.id, "_blank", "noopener");
+            route();
+          });
+        } }, h("div", { class: "grid two" },
+          lbl(tr("plan"), plan), lbl(tr("months"), months), lbl(tr("currency"), currency), lbl(tr("amount"), amount),
+          lbl(tr("buyer_name"), buyer), lbl(tr("buyer_tax_id"), taxId), lbl(tr("buyer_email"), email)), btn);
+      }
+
       main.appendChild(h("div", { class: "card" }, h("div", { class: "table-wrap" }, h("table", { class: "t" },
-        h("thead", {}, h("tr", {}, ["#", tr("business_name"), tr("owner"), tr("plan"), tr("ai_answers"), tr("sources_used"), "Telegram", tr("expires"), ""].map(function (x) {
+        h("thead", {}, h("tr", {}, ["#", tr("business_name"), tr("owner"), tr("plan"), tr("ai_answers"), tr("sources_used"), "Telegram", tr("expires"), "", ""].map(function (x) {
           return h("th", { text: x });
         }))),
         h("tbody", {}, d.workspaces.map(function (w) {
-          var sel = h("select", {}, ["free", "starter", "pro", "business"].map(function (p) { return h("option", { value: p, text: p }); }));
+          var sel = h("select", { style: { minWidth: "96px" } }, ["free", "starter", "pro", "business"].map(function (p) { return h("option", { value: p, text: p }); }));
           sel.value = w.plan;
           var exp = h("input", { type: "date", value: w.plan_expires_at ? w.plan_expires_at.slice(0, 10) : "" });
           var btn = h("button", { class: "btn sm", text: tr("set_plan") });
@@ -1027,13 +1116,36 @@
               plan: sel.value, expires_at: exp.value ? exp.value + "T23:59:59Z" : null,
             })).then(function () { toast(tr("saved")); });
           });
-          return h("tr", {},
+          var invBtn = h("button", { class: "btn secondary sm", text: "🧾 " + tr("new_invoice") });
+          var formRow = h("tr", { hidden: true }, h("td", { colspan: "10" }));
+          invBtn.addEventListener("click", function () {
+            if (!formRow.firstChild.firstChild) formRow.firstChild.appendChild(invoiceForm(w));
+            formRow.hidden = !formRow.hidden;
+          });
+          var planCls = w.expiring_soon ? "pill warn" : "pill";
+          return [h("tr", {},
             h("td", { text: String(w.id) }), h("td", { text: w.name }), h("td", { class: "small", text: w.owner_email }),
-            h("td", {}, h("span", { class: "pill", text: w.plan + (w.plan_source !== "none" ? " · " + w.plan_source : "") })),
+            h("td", {}, h("span", { class: planCls, text: w.plan + (w.plan_source !== "none" ? " · " + w.plan_source : "") })),
             h("td", { class: "num", text: fmtNum(w.ai_messages) }), h("td", { class: "num", text: fmtNum(w.documents) }),
             h("td", { text: w.telegram ? "✅" : "—" }),
-            h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } }, sel, exp)), h("td", {}, btn));
+            h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } }, sel, exp)), h("td", {}, btn), h("td", {}, invBtn)),
+            formRow];
         }))))));
+
+      main.appendChild(h("div", { class: "card" }, h("h2", { text: tr("invoices") }),
+        invoiceTable(inv.invoices, function (i) {
+          if (i.status !== "issued") return null;
+          var paid = h("button", { class: "btn sm", text: "✓ " + tr("mark_paid") });
+          paid.addEventListener("click", function () {
+            if (!confirm(tr("confirm_paid", { n: i.number }))) return;
+            run(paid, api("POST", "/api/platform/invoices/" + i.id + "/paid")).then(function () { toast(tr("saved")); route(); });
+          });
+          var voidBtn = h("button", { class: "btn danger sm", text: tr("void_invoice") });
+          voidBtn.addEventListener("click", function () {
+            run(voidBtn, api("POST", "/api/platform/invoices/" + i.id + "/void")).then(function () { route(); });
+          });
+          return [paid, voidBtn];
+        })));
     });
   }
 

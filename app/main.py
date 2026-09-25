@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__, db
 from app.config import get_settings
 from app.plans import PLANS
-from app.routers import admin, auth, hooks, platform, widget
+from app.routers import admin, auth, hooks, invoices, platform, widget
 from app.services import telegram
 
 log = logging.getLogger("app")
@@ -64,12 +64,12 @@ def create_app() -> FastAPI:
             response.headers["Vary"] = "Origin"
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        if request.url.path.startswith(("/admin", "/api/auth", "/api/workspaces", "/api/platform")):
+        if request.url.path.startswith(("/admin", "/api/auth", "/api/workspaces", "/api/platform", "/invoice/")):
             response.headers.setdefault("X-Frame-Options", "DENY")
             response.headers.setdefault("Cache-Control", "no-store")
         return response
 
-    for r in (auth.router, admin.router, widget.router, hooks.router, platform.router):
+    for r in (auth.router, admin.router, widget.router, hooks.router, platform.router, invoices.router):
         app.include_router(r)
 
     @app.get("/api/public/plans", tags=["public"])

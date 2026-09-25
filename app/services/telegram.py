@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db import SessionLocal
 from app.i18n import t
-from app.models import Conversation, Lead, TelegramLink, Workspace, new_connect_code
+from app.models import Conversation, Invoice, Lead, TelegramLink, Workspace, new_connect_code
 from app.services import chat
 
 log = logging.getLogger(__name__)
@@ -142,6 +142,27 @@ def notify_lead(db: Session, settings: Settings, lead_id: int) -> None:
         conv = db.get(Conversation, lead.conversation_id)
         if conv:
             _link(db, ws, conv, message_id)
+
+
+@_with_session
+def notify_invoice(db: Session, settings: Settings, invoice_id: int) -> None:
+    """Tell the customer about a new invoice or a confirmed payment."""
+    from app.services.invoices import money  # local import: invoices imports nothing from here
+
+    inv = db.get(Invoice, invoice_id)
+    ws = db.get(Workspace, inv.workspace_id) if inv and inv.workspace_id else None
+    if not ws or not ws.telegram_chat_id:
+        return
+    link = f"{settings.public_url}/invoice/{inv.id}"
+    if inv.status == "paid":
+        until = f"{inv.period_end:%d.%m.%Y}" if inv.period_end else ""
+        text = (f"✅ {ws.name}: გადახდა მიღებულია / payment received ({inv.number}).\n"
+                f"პაკეტი / plan: {inv.plan}, ვადა / until {until}. მადლობა! / Thank you!")
+    else:
+        text = (f"🧾 {ws.name}: ახალი ინვოისი / new invoice {inv.number}\n"
+                f"{money(inv.amount, inv.currency)} · {inv.plan} · {inv.months} თვე / month(s)\n"
+                f"გადახდის ვადა / due: {inv.due_at:%d.%m.%Y}\n{link}")
+    send(settings, ws.telegram_chat_id, text)
 
 
 # --- incoming updates -------------------------------------------------------------------------

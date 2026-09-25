@@ -193,3 +193,31 @@ class Usage(Base):
     )
     period: Mapped[str] = mapped_column(String(7), primary_key=True)  # YYYY-MM
     ai_messages: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class Invoice(Base):
+    """A bank-transfer invoice issued by the platform owner. Marking it paid extends the plan.
+    Buyer details and the workspace name are copied in, so the record survives workspace deletion."""
+
+    __tablename__ = "invoices"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    number: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    workspace_id: Mapped[int | None] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    workspace_name: Mapped[str] = mapped_column(String(200), default="")
+    plan: Mapped[str] = mapped_column(String(20))
+    months: Mapped[int] = mapped_column(Integer, default=1)
+    amount: Mapped[float] = mapped_column(Float)
+    currency: Mapped[str] = mapped_column(String(3), default="GEL")
+    status: Mapped[str] = mapped_column(String(10), default="issued")  # issued|paid|void
+    buyer_name: Mapped[str] = mapped_column(String(200), default="")
+    buyer_tax_id: Mapped[str] = mapped_column(String(64), default="")
+    buyer_email: Mapped[str] = mapped_column(String(320), default="")
+    note: Mapped[str] = mapped_column(Text, default="")
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+    due_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

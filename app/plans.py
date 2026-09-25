@@ -20,6 +20,7 @@ class Plan:
     id: str
     name: str
     price_usd: int
+    price_gel: int  # monthly price for local bank-transfer invoices
     ai_messages: int  # AI answers per month (0 = unlimited)
     documents: int  # knowledge sources (0 = unlimited)
     crawl_pages: int  # pages per website import
@@ -34,25 +35,33 @@ class Plan:
 
 PLANS: dict[str, Plan] = {
     "free": Plan(
-        "free", "Free", 0, 100, 5, 5, False,
+        "free", "Free", 0, 0, 100, 5, 5, False,
         ("Website chat widget", "Georgian / English / Russian", "Telegram handoff", "Basic analytics"),
     ),
     "starter": Plan(
-        "starter", "Starter", 19, 1_000, 25, 30, False,
+        "starter", "Starter", 19, 49, 1_000, 25, 30, False,
         ("Everything in Free", "1,000 AI answers / month", "25 knowledge sources", "Lead capture + CSV export"),
     ),
     "pro": Plan(
-        "pro", "Pro", 49, 5_000, 100, 100, True,
+        "pro", "Pro", 49, 129, 5_000, 100, 100, True,
         ("Everything in Starter", "5,000 AI answers / month", "Remove branding", "Priority email support"),
     ),
     "business": Plan(
-        "business", "Business", 99, 20_000, 500, 300, True,
+        "business", "Business", 99, 249, 20_000, 500, 300, True,
         ("Everything in Pro", "20,000 AI answers / month", "500 knowledge sources", "Setup help & onboarding call"),
     ),
 }
 
-SELF_HOSTED = Plan("self_hosted", "Self-hosted", 0, 0, 0, 0, True, ("Unlimited",))
+SELF_HOSTED = Plan("self_hosted", "Self-hosted", 0, 0, 0, 0, 0, True, ("Unlimited",))
 PAID_PLAN_IDS = ("starter", "pro", "business")
+TRIAL_PLAN = "pro"
+
+
+def invoice_amount(plan_id: str, months: int, currency: str) -> float:
+    """Default invoice total. Every full year is billed as 10 months ("12 for the price of 10")."""
+    plan = PLANS[plan_id]
+    monthly = plan.price_gel if currency == "GEL" else plan.price_usd
+    return float(monthly * (months - 2 * (months // 12)))
 
 
 def effective_plan(ws: Workspace, settings: Settings) -> Plan:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
@@ -8,9 +9,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db import get_db
+from app.db import get_db, utcnow
 from app.models import User, Workspace
-from app.plans import effective_plan
+from app.plans import TRIAL_PLAN, effective_plan
 from app.routers.deps import (
     SESSION_COOKIE,
     client_ip,
@@ -70,7 +71,12 @@ def signup(
     user = User(email=email, password_hash=hash_password(body.password))
     db.add(user)
     db.flush()
-    db.add(Workspace(owner_id=user.id, name=body.workspace_name.strip(), bot_name="Assistant"))
+    ws = Workspace(owner_id=user.id, name=body.workspace_name.strip(), bot_name="Assistant")
+    if settings.billing_enabled and settings.trial_days:
+        # Free trial of the Pro plan for the first chatbot; it falls back to Free when it ends.
+        ws.plan, ws.plan_source = TRIAL_PLAN, "trial"
+        ws.plan_expires_at = utcnow() + timedelta(days=settings.trial_days)
+    db.add(ws)
     db.commit()
     _set_session(response, user, settings)
     return {"ok": True}

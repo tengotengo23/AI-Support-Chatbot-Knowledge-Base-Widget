@@ -92,6 +92,15 @@ class Settings:
     legal_name: str
     contact_email: str
     legal_updated: str
+    trial_days: int
+
+    # Bank-transfer invoices (printed on /invoice/<id>)
+    seller_tax_id: str
+    seller_address: str
+    seller_bank: str
+    seller_iban: str
+    invoice_prefix: str
+    invoice_due_days: int
 
     # Paddle (hosted billing)
     paddle_env: str
@@ -154,6 +163,13 @@ def get_settings() -> Settings:
         legal_name=_env("LEGAL_NAME"),
         contact_email=_env("CONTACT_EMAIL"),
         legal_updated=_env("LEGAL_UPDATED", "2026-09-25"),
+        trial_days=max(0, _int("TRIAL_DAYS", 0)),
+        seller_tax_id=_env("SELLER_TAX_ID"),
+        seller_address=_env("SELLER_ADDRESS"),
+        seller_bank=_env("SELLER_BANK"),
+        seller_iban=_env("SELLER_IBAN"),
+        invoice_prefix=_env("INVOICE_PREFIX", "INV"),
+        invoice_due_days=max(1, _int("INVOICE_DUE_DAYS", 7)),
         paddle_env=_env("PADDLE_ENV", "sandbox").lower(),
         paddle_client_token=_env("PADDLE_CLIENT_TOKEN"),
         paddle_webhook_secret=_env("PADDLE_WEBHOOK_SECRET"),

@@ -20,7 +20,7 @@ in Georgian, English and Russian — and hands tricky conversations to a human o
 | 📇 **Lead capture** | Name / phone / email form, lead statuses and order value, CSV export, Telegram notification. |
 | 📊 **Analytics** | Conversations per day, answer rate, most asked questions and **unanswered questions with one-click “Add answer”**. |
 | 🧩 **One-line install** | Shadow-DOM widget (no CSS conflicts), mobile full-screen, brand color, `Docs2Chat.open()` JS API. |
-| 🏢 **Multi-tenant SaaS ready** | Accounts, many chatbots per account, plans & monthly quotas, Paddle subscriptions, manual (bank transfer) plans, platform admin page with MRR. |
+| 🏢 **Multi-tenant SaaS ready** | Accounts, many chatbots per account, plans & monthly quotas, Paddle subscriptions, free trials, bilingual bank-transfer invoices (mark paid → plan extends automatically), platform admin page with MRR, cash collected and renewal reminders. |
 | 🔒 **Secure defaults** | scrypt passwords, signed http-only cookies, CSRF header check, SSRF-safe URL import, per-site origin allow-list, rate limits, CSV-injection-safe export. |
 
 ## Quick start (self-hosted, free forever)
