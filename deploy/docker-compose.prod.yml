@@ -1,0 +1,36 @@
+# Production (hosted) setup with automatic HTTPS via Caddy.
+#   1. Point your domain's DNS A record to the server.
+#   2. cp .env.example .env  → set PUBLIC_URL=https://your-domain, keys, BILLING_ENABLED=true ...
+#   3. DOMAIN=chat.example.com docker compose -f deploy/docker-compose.prod.yml up -d --build
+services:
+  app:
+    build: ..
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: true
+    environment:
+      FORWARDED_ALLOW_IPS: "*"   # only Caddy can reach the app (no published port)
+    volumes:
+      - data:/data
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN=your.domain}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ka">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI support chat for your website</title>
+  <meta name="description" content="AI chat widget that answers customers from your FAQ, website and PDFs in Georgian, English and Russian, with Telegram handoff to a human. Open source.">
+  <style>
+    :root { color-scheme: light; --bg:#fbfbfa; --surface:#ffffff; --surface-2:#f3f3f1; --border:#e4e4e1; --text:#0b0b0b; --text-2:#52514e; --muted:#8a8984; --accent:#2563eb; --accent-ink:#fff; --accent-soft:#e8efff; }
+    @media (prefers-color-scheme: dark) {
+      :root:where(:not([data-theme="light"])) { color-scheme: dark; --bg:#121211; --surface:#1a1a19; --surface-2:#222220; --border:#2f2f2c; --text:#fff; --text-2:#c3c2b7; --muted:#8f8e86; --accent:#5b8cff; --accent-ink:#0b0b0b; --accent-soft:#1d2a4a; }
+    }
+    :root[data-theme="dark"] { color-scheme: dark; --bg:#121211; --surface:#1a1a19; --surface-2:#222220; --border:#2f2f2c; --text:#fff; --text-2:#c3c2b7; --muted:#8f8e86; --accent:#5b8cff; --accent-ink:#0b0b0b; --accent-soft:#1d2a4a; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Georgian","Noto Sans",Arial,sans-serif; }
+    a { color: var(--accent); }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+    header { position: sticky; top: 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); z-index: 5; }
+    header .wrap { display:flex; align-items:center; gap:18px; height:60px; }
+    .logo { font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; margin-right: auto; }
+    nav a { color: var(--text-2); text-decoration: none; font-size: 14px; }
+    .btn { display:inline-flex; align-items:center; gap:6px; background:var(--accent); color:var(--accent-ink); padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:700; border:1px solid transparent; font-size:15px; cursor:pointer; }
+    .btn.secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .lang { background:none; border:1px solid var(--border); color:var(--text-2); border-radius:8px; padding:4px 8px; cursor:pointer; font:inherit; font-size:13px; }
+    .hero { padding: 72px 0 48px; display:grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items:center; }
+    .hero h1 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; }
+    .hero p.lead { font-size: 18px; color: var(--text-2); margin: 0 0 24px; }
+    .cta { display:flex; gap:10px; flex-wrap:wrap; }
+    .note { font-size: 13px; color: var(--muted); margin-top: 12px; }
+    .mock { background: var(--surface); border:1px solid var(--border); border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.10); overflow: hidden; }
+    .mock .top { background: var(--accent); color: var(--accent-ink); padding: 14px 16px; font-weight: 700; }
+    .mock .body { padding: 16px; display:flex; flex-direction:column; gap:10px; font-size: 14px; background: var(--surface-2); }
+    .b { max-width: 85%; padding: 9px 12px; border-radius: 14px; }
+    .b.u { align-self:flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+    .b.a { align-self:flex-start; background: var(--surface); border:1px solid var(--border); border-bottom-left-radius: 4px; }
+    .b.s { align-self:center; font-size: 12px; color: var(--text-2); background: var(--accent-soft); }
+    section { padding: 56px 0; }
+    h2 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .sub { color: var(--text-2); margin: 0 0 28px; }
+    .features { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .feature { background: var(--surface); border:1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .feature .i { font-size: 24px; }
+    .feature h3 { margin: 8px 0 6px; font-size: 17px; }
+    .feature p { margin: 0; color: var(--text-2); font-size: 14px; }
+    .steps { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; counter-reset: s; }
+    .step { padding: 20px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 12px 12px 0; }
+    .step b { display:block; margin-bottom: 4px; }
+    .plans { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .plan { background: var(--surface); border:1px solid var(--border); border-radius: 16px; padding: 22px; display:flex; flex-direction:column; gap: 10px; }
+    .plan.pop { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .plan .n { font-weight: 800; }
+    .plan .p { font-size: 34px; font-weight: 800; line-height: 1; }
+    .plan .p small { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .plan ul { margin: 0; padding-left: 18px; color: var(--text-2); font-size: 14px; flex: 1; }
+    .trust { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    .trust ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); }
+    details { background: var(--surface); border:1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+    summary { font-weight: 700; cursor: pointer; }
+    details p { color: var(--text-2); margin: 10px 0 0; }
+    footer { border-top: 1px solid var(--border); padding: 28px 0; color: var(--muted); font-size: 14px; }
+    footer .wrap { display:flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+    @media (max-width: 820px) { .hero { grid-template-columns: 1fr; padding-top: 40px; } nav .hide-m { display:none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="/" data-brand>Docs2Chat</a>
+      <nav class="row"><a class="hide-m" href="#pricing" data-t="nav_pricing"></a></nav>
+      <nav><a class="hide-m" data-github href="#">GitHub</a></nav>
+      <button class="lang" id="lang" type="button"></button>
+      <a class="btn secondary" href="/admin#/login" data-t="login"></a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <div>
+        <h1 data-t="hero_title"></h1>
+        <p class="lead" data-t="hero_sub"></p>
+        <div class="cta">
+          <a class="btn" href="/admin#/signup" data-t="cta_start"></a>
+          <a class="btn secondary" data-github href="#" data-t="cta_github"></a>
+        </div>
+        <div class="note" data-t="cta_note"></div>
+      </div>
+      <div class="mock" aria-hidden="true">
+        <div class="top" data-t="mock_title"></div>
+        <div class="body">
+          <div class="b a" data-t="mock_1"></div>
+          <div class="b u" data-t="mock_2"></div>
+          <div class="b a" data-t="mock_3"></div>
+          <div class="b u" data-t="mock_4"></div>
+          <div class="b s" data-t="mock_5"></div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <h2 data-t="f_title"></h2>
+      <p class="sub" data-t="f_sub"></p>
+      <div class="features">
+        <div class="feature"><div class="i">📚</div><h3 data-t="f1_t"></h3><p data-t="f1_p"></p></div>
+        <div class="feature"><div class="i">🇬🇪</div><h3 data-t="f2_t"></h3><p data-t="f2_p"></p></div>
+        <div class="feature"><div class="i">✈️</div><h3 data-t="f3_t"></h3><p data-t="f3_p"></p></div>
+        <div class="feature"><div class="i">📇</div><h3 data-t="f4_t"></h3><p data-t="f4_p"></p></div>
+        <div class="feature"><div class="i">📊</div><h3 data-t="f5_t"></h3><p data-t="f5_p"></p></div>
+        <div class="feature"><div class="i">🧩</div><h3 data-t="f6_t"></h3><p data-t="f6_p"></p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-t="how_title"></h2>
+      <div class="steps">
+        <div class="step"><b data-t="s1_t"></b><span data-t="s1_p"></span></div>
+        <div class="step"><b data-t="s2_t"></b><span data-t="s2_p"></span></div>
+        <div class="step"><b data-t="s3_t"></b><span data-t="s3_p"></span></div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <h2 data-t="p_title"></h2>
+      <p class="sub" data-t="p_sub"></p>
+      <div class="plans" id="plans"></div>
+      <p class="note" id="fee-note" hidden></p>
+    </section>
+
+    <section>
+      <div class="trust">
+        <h2 data-t="t_title"></h2>
+        <ul>
+          <li data-t="t_1"></li>
+          <li data-t="t_2"></li>
+          <li data-t="t_3"></li>
+          <li data-t="t_4"></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-t="faq_title"></h2>
+      <details><summary data-t="q1"></summary><p data-t="a1"></p></details>
+      <details><summary data-t="q2"></summary><p data-t="a2"></p></details>
+      <details><summary data-t="q3"></summary><p data-t="a3"></p></details>
+      <details><summary data-t="q4"></summary><p data-t="a4"></p></details>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© <span id="year"></span> <span data-brand>Docs2Chat</span> · <span data-t="footer_os"></span></span>
+      <span><a data-github href="#">GitHub</a> · <a href="/legal#terms" data-t="terms"></a> · <a href="/legal#privacy" data-t="privacy"></a> · <a href="/legal#refund" data-t="refund"></a> · <a href="/admin#/login" data-t="login"></a></span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var T = {
+        ka: {
+          nav_pricing: "ფასები", login: "შესვლა",
+          hero_title: "AI ჩატი თქვენი საიტისთვის, რომელიც მომხმარებელს 24/7 პასუხობს",
+          hero_sub: "ატვირთეთ FAQ, PDF ან საიტის მისამართი — ბოტი ქართულად, ინგლისურად და რუსულად უპასუხებს. რთულ კითხვებს Telegram-ში გადმოგიგზავნით.",
+          cta_start: "დაიწყეთ უფასოდ", cta_github: "Open source (GitHub)",
+          cta_note: "უფასო პაკეტი ბარათის გარეშე · დაყენება 10 წუთში · ერთი ხაზი კოდი",
+          mock_title: "🤖 ასისტენტი", mock_1: "გამარჯობა! 👋 რით შემიძლია დაგეხმაროთ?",
+          mock_2: "ბათუმში მიწოდება რა ღირს?", mock_3: "ბათუმში მიწოდება 10 ლარია და 2 სამუშაო დღე სჭირდება. 150 ლარზე მეტ შეკვეთაზე უფასოა 🚚",
+          mock_4: "ოპერატორთან დამაკავშირეთ", mock_5: "თქვენი შეკითხვა გადაეცა ოპერატორს ✈️",
+          f_title: "ყველაფერი, რაც მცირე ბიზნესს სჭირდება", f_sub: "ნაკლები განმეორებადი კითხვა, მეტი გაყიდვა.",
+          f1_t: "პასუხები თქვენი ინფორმაციიდან", f1_p: "FAQ, PDF კატალოგი, ფასები, საიტის გვერდები. ბოტი არ იგონებს — თუ არ იცის, ამბობს და ოპერატორს სთავაზობს.",
+          f2_t: "ქართული, ინგლისური, რუსული", f2_p: "ვიზიტორის ენას ავტომატურად ცნობს და იმავე ენაზე პასუხობს.",
+          f3_t: "Telegram-ში გადართვა", f3_p: "როცა ადამიანი სჭირდება, ჩატი მოდის თქვენს Telegram-ში. პასუხობთ Reply-ით და ვიზიტორი საიტზევე ხედავს.",
+          f4_t: "Lead-ების შეგროვება", f4_p: "სახელი, ტელეფონი, ელ-ფოსტა — პირდაპირ პანელში, Telegram-ში და CSV-ში.",
+          f5_t: "ანალიტიკა", f5_p: "ყველაზე ხშირი და უპასუხო კითხვები. უპასუხო კითხვას ერთი დაწკაპუნებით უმატებთ პასუხს.",
+          f6_t: "ნებისმიერ საიტზე", f6_p: "WordPress, Shopify, Wix, Tilda ან საკუთარი საიტი — ერთი <script> ხაზი.",
+          how_title: "როგორ მუშაობს",
+          s1_t: "1. დაამატეთ ცოდნა", s1_p: "ატვირთეთ PDF, მიუთითეთ საიტი ან დაწერეთ კითხვა-პასუხები.",
+          s2_t: "2. ჩასვით კოდი საიტზე", s2_p: "დააკოპირეთ ერთი ხაზი და ჩასვით საიტზე.",
+          s3_t: "3. დააკავშირეთ Telegram", s3_p: "რთული კითხვები და ახალი კონტაქტები პირდაპირ ტელეფონზე მოგივათ.",
+          p_title: "მარტივი ფასები", p_sub: "თვიური გამოწერა, ნებისმიერ დროს გაუქმება. Self-hosted ვერსია სამუდამოდ უფასოა.",
+          per_month: "/თვე", choose: "არჩევა", free_btn: "დაიწყეთ უფასოდ",
+          fee_note: "გამჭვირვალე საკომისიო: დადასტურებული შეკვეთების {p}% (მხოლოდ ჰოსტინგ ვერსიაზე). დამალული საკომისიო არ არის.",
+          t_title: "გამჭვირვალობა და ნდობა",
+          t_1: "კოდი სრულად ღიაა (AGPL-3.0) — შეგიძლიათ ნახოთ, შეამოწმოთ და საკუთარ სერვერზე უფასოდ გაუშვათ.",
+          t_2: "კოდში არ არის დამალული საკომისიო, ვოლეტი ან ტრეკერი.",
+          t_3: "ჰოსტინგ ვერსიაში იხდით მხოლოდ იმას, რაც ფასებშია მითითებული.",
+          t_4: "თქვენი მონაცემები თქვენია — კონტაქტები ნებისმიერ დროს CSV-ში გადმოიწერება.",
+          faq_title: "ხშირი კითხვები",
+          q1: "AI ხომ არ მოიგონებს პასუხს?", a1: "ბოტს მკაცრად აქვს მითითებული, უპასუხოს მხოლოდ თქვენი ინფორმაციით. თუ პასუხი არ იცის, პირდაპირ ამბობს და ოპერატორს ან კონტაქტის დატოვებას სთავაზობს.",
+          q2: "რა მჭირდება დასაწყებად?", a2: "მხოლოდ საიტი და 10 წუთი. რეგისტრაციის შემდეგ დაამატეთ ინფორმაცია და ჩასვით ერთი ხაზი კოდი.",
+          q3: "შემიძლია საკუთარ სერვერზე გავუშვა?", a3: "დიახ, სრულიად უფასოდ: docker compose up. ინსტრუქცია GitHub-ზეა.",
+          q4: "როგორ გადავიხადო?", a4: "ბარათით (Paddle — ინვოისი და გადასახადები ავტომატურად), ან საქართველოში ბანკით ინვოისის საფუძველზე.",
+          footer_os: "ღია კოდი, AGPL-3.0", terms: "პირობები", privacy: "კონფიდენციალურობა", refund: "თანხის დაბრუნება",
+        },
+        en: {
+          nav_pricing: "Pricing", login: "Log in",
+          hero_title: "An AI chat for your website that answers customers 24/7",
+          hero_sub: "Upload your FAQ, PDFs or website — the bot answers in Georgian, English and Russian, and forwards tricky questions to you on Telegram.",
+          cta_start: "Start free", cta_github: "Open source (GitHub)",
+          cta_note: "Free plan, no card · 10-minute setup · one line of code",
+          mock_title: "🤖 Assistant", mock_1: "Hi! 👋 How can I help you today?",
+          mock_2: "How much is delivery to Batumi?", mock_3: "Delivery to Batumi is 10 GEL and takes 2 business days. It's free for orders over 150 GEL 🚚",
+          mock_4: "Can I talk to a human?", mock_5: "Your question was sent to our team ✈️",
+          f_title: "Everything a small business needs", f_sub: "Fewer repetitive questions, more sales.",
+          f1_t: "Answers from your own content", f1_p: "FAQ, PDF catalogs, price lists, website pages. It doesn't make things up — if it doesn't know, it says so and offers a human.",
+          f2_t: "Georgian, English, Russian", f2_p: "Detects the visitor's language and replies in the same language.",
+          f3_t: "Telegram handoff", f3_p: "When a human is needed, the chat arrives in your Telegram. Reply there — the visitor sees it on your website.",
+          f4_t: "Lead capture", f4_p: "Name, phone, email — in your dashboard, in Telegram and as CSV.",
+          f5_t: "Analytics", f5_p: "Most asked and unanswered questions. Turn any unanswered question into an answer in one click.",
+          f6_t: "Works on any website", f6_p: "WordPress, Shopify, Wix, Tilda or custom — one <script> tag.",
+          how_title: "How it works",
+          s1_t: "1. Add your knowledge", s1_p: "Upload PDFs, import your website or write Q&A pairs.",
+          s2_t: "2. Paste the code", s2_p: "Copy one line and paste it into your website.",
+          s3_t: "3. Connect Telegram", s3_p: "Tricky questions and new leads arrive straight on your phone.",
+          p_title: "Simple pricing", p_sub: "Monthly subscription, cancel anytime. The self-hosted version is free forever.",
+          per_month: "/month", choose: "Choose", free_btn: "Start free",
+          fee_note: "Transparent platform fee: {p}% of confirmed orders (hosted version only). No hidden fees.",
+          t_title: "Transparency & trust",
+          t_1: "The code is fully open source (AGPL-3.0) — read it, audit it and self-host it for free.",
+          t_2: "No hidden fees, wallets or trackers in the code.",
+          t_3: "On the hosted version you pay only what the pricing says.",
+          t_4: "Your data is yours — export your leads as CSV at any time.",
+          faq_title: "FAQ",
+          q1: "Will the AI make up answers?", a1: "The bot is strictly instructed to answer only from your content. If it doesn't know, it says so and offers a human or a contact form.",
+          q2: "What do I need to start?", a2: "A website and 10 minutes. Sign up, add your content and paste one line of code.",
+          q3: "Can I run it on my own server?", a3: "Yes, for free: docker compose up. Instructions are on GitHub.",
+          q4: "How do I pay?", a4: "By card via Paddle (invoices and sales tax handled automatically), or by bank transfer against an invoice.",
+          footer_os: "Open source, AGPL-3.0", terms: "Terms", privacy: "Privacy", refund: "Refunds",
+        },
+      };
+      var lang = "ka";
+      try { lang = localStorage.getItem("d2c_site_lang") || ((navigator.language || "").slice(0, 2) === "ka" ? "ka" : "en"); } catch (e) {}
+      var info = { brand_name: "Docs2Chat", badge_url: "#" };
+      var plans = null;
+
+      function apply() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll("[data-t]").forEach(function (el) { el.textContent = T[lang][el.getAttribute("data-t")] || ""; });
+        document.getElementById("lang").textContent = lang === "ka" ? "English" : "ქართული";
+        document.querySelectorAll("[data-brand]").forEach(function (el) { el.textContent = info.brand_name; });
+        document.querySelectorAll("[data-github]").forEach(function (el) { el.href = info.badge_url; el.target = "_blank"; el.rel = "noopener"; });
+        document.title = info.brand_name + " — " + T[lang].hero_title;
+        renderPlans();
+      }
+      function renderPlans() {
+        var box = document.getElementById("plans");
+        if (!plans) return;
+        box.textContent = "";
+        plans.plans.forEach(function (p) {
+          var card = document.createElement("div");
+          card.className = "plan" + (p.id === "pro" ? " pop" : "");
+          var n = document.createElement("div"); n.className = "n"; n.textContent = p.name;
+          var price = document.createElement("div"); price.className = "p"; price.textContent = "$" + p.price_usd;
+          var small = document.createElement("small"); small.textContent = T[lang].per_month; price.appendChild(small);
+          var ul = document.createElement("ul");
+          p.features.forEach(function (f) { var li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
+          var a = document.createElement("a");
+          a.className = "btn" + (p.id === "pro" ? "" : " secondary");
+          a.href = "/admin#/signup";
+          a.textContent = p.price_usd ? T[lang].choose : T[lang].free_btn;
+          [n, price, ul, a].forEach(function (x) { card.appendChild(x); });
+          box.appendChild(card);
+        });
+        var note = document.getElementById("fee-note");
+        note.hidden = !(plans.platform_fee_percent > 0);
+        note.textContent = T[lang].fee_note.replace("{p}", plans.platform_fee_percent);
+      }
+      document.getElementById("lang").addEventListener("click", function () {
+        lang = lang === "ka" ? "en" : "ka";
+        try { localStorage.setItem("d2c_site_lang", lang); } catch (e) {}
+        apply();
+      });
+      document.getElementById("year").textContent = new Date().getFullYear();
+      apply();
+      fetch("/api/public/landing").then(function (r) { return r.json(); }).then(function (d) {
+        info = d; apply();
+        if (d.demo_widget_key) {
+          var s = document.createElement("script");
+          s.src = "/widget.js"; s.async = true; s.setAttribute("data-key", d.demo_widget_key);
+          document.body.appendChild(s);
+        }
+      }).catch(function () {});
+      fetch("/api/public/plans").then(function (r) { return r.json(); }).then(function (d) { plans = d; renderPlans(); }).catch(function () {});
+    })();
+  </script>
+</body>
+</html>

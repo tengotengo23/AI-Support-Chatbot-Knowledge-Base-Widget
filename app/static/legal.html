@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms, Privacy &amp; Refunds</title>
+  <style>
+    :root { color-scheme: light; --bg:#fbfbfa; --text:#0b0b0b; --text-2:#52514e; --border:#e4e4e1; --accent:#2563eb; }
+    @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) { color-scheme: dark; --bg:#121211; --text:#fff; --text-2:#c3c2b7; --border:#2f2f2c; --accent:#5b8cff; } }
+    :root[data-theme="dark"] { color-scheme: dark; --bg:#121211; --text:#fff; --text-2:#c3c2b7; --border:#2f2f2c; --accent:#5b8cff; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Georgian",Arial,sans-serif; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+    a { color: var(--accent); }
+    h1 { font-size: 28px; margin: 0 0 6px; }
+    h2 { font-size: 22px; margin: 40px 0 8px; padding-top: 16px; border-top: 1px solid var(--border); }
+    h3 { font-size: 16px; margin: 20px 0 4px; }
+    p, li { color: var(--text-2); }
+    nav { display:flex; gap:14px; margin: 12px 0 24px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" data-brand>Docs2Chat</a>
+    <h1>Terms, Privacy &amp; Refunds</h1>
+    <p>Last updated: <span id="updated"></span></p>
+    <nav><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a><a href="#refund">Refund Policy</a></nav>
+
+    <h2 id="terms">Terms of Service</h2>
+    <p>These terms govern the hosted service <b data-brand>Docs2Chat</b> (the “Service”) provided by <b data-legal></b> (“we”). By creating an account you agree to them.</p>
+    <h3>1. The Service</h3>
+    <p>The Service lets you create an AI chat assistant for your website that answers visitors using content you provide, and forwards conversations to you. The software is open source (AGPL-3.0); these terms apply only to our hosted version.</p>
+    <h3>2. Your account and content</h3>
+    <p>You are responsible for your account, for the content you upload, and for having the right to use it. You must not use the Service for unlawful, deceptive or harmful purposes, or to send spam. AI answers can be inaccurate; you are responsible for reviewing your assistant's knowledge base and configuration.</p>
+    <h3>3. Plans, payments and fees</h3>
+    <p>Paid plans are billed monthly in advance. Prices, limits and any platform fee are shown on the pricing page before you subscribe. Card payments are processed by our reseller and Merchant of Record, Paddle.com, which also handles invoices and sales tax. We may also accept bank transfers against an invoice. If a plan expires or is cancelled, your workspace moves to the Free plan; your data is kept.</p>
+    <h3>4. Availability and liability</h3>
+    <p>We aim for high availability but provide the Service “as is”, without warranties. To the extent permitted by law, our total liability is limited to the amount you paid us in the three months before the claim.</p>
+    <h3>5. Termination</h3>
+    <p>You can cancel at any time from your billing page. We may suspend accounts that violate these terms. You can export your leads as CSV at any time.</p>
+    <h3>6. Contact</h3>
+    <p>Questions: <a data-email href="#"></a></p>
+
+    <h2 id="privacy">Privacy Policy</h2>
+    <h3>What we collect</h3>
+    <ul>
+      <li><b>Account data:</b> your email and a hashed password.</li>
+      <li><b>Your content:</b> documents, FAQ entries and settings you add.</li>
+      <li><b>Chat data:</b> messages that visitors of your website send to the assistant, the page address, and contact details visitors choose to leave. A random visitor identifier is stored in the visitor's browser (localStorage) to keep the conversation.</li>
+    </ul>
+    <h3>How we use it</h3>
+    <p>Only to provide the Service: to answer visitors, show you conversations and analytics, forward chats to your Telegram if you connect it, and bill you. We do not sell data and do not use it for advertising. Messages are sent to the AI provider configured for the Service (for example Anthropic or OpenAI) to generate answers.</p>
+    <h3>Roles</h3>
+    <p>For chat data of your website visitors you are the data controller and we act as your processor. Please mention the chat assistant in your own website's privacy policy.</p>
+    <h3>Retention and your rights</h3>
+    <p>Data is kept while your account is active and deleted when you delete a workspace or your account. You can request access, correction or deletion by contacting <a data-email href="#"></a>.</p>
+
+    <h2 id="refund">Refund Policy</h2>
+    <p>If you are not satisfied, contact us within <b>14 days</b> of your first payment for a full refund. Renewals can be cancelled at any time and stay active until the end of the paid period; partial months are not refunded except where required by law. Refunds for card payments are processed by Paddle to the original payment method.</p>
+  </div>
+  <script>
+    fetch("/api/public/landing").then(function (r) { return r.json(); }).then(function (d) {
+      document.querySelectorAll("[data-brand]").forEach(function (e) { e.textContent = d.brand_name; });
+      document.querySelectorAll("[data-legal]").forEach(function (e) { e.textContent = d.legal_name || d.brand_name; });
+      document.querySelectorAll("[data-email]").forEach(function (e) {
+        e.textContent = d.contact_email || "—";
+        if (d.contact_email) e.href = "mailto:" + d.contact_email;
+      });
+      document.getElementById("updated").textContent = d.legal_updated || "";
+    }).catch(function () {});
+  </script>
+</body>
+</html>
